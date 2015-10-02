@@ -4,8 +4,21 @@ from flask import abort
 from flask import make_response
 from flask import request
 from flask import url_for
+from flask.ext.httpauth import HTTPBasicAuth
 
 app = Flask(__name__)
+
+auth = HTTPBasicAuth()
+
+@auth.get_password
+def get_password(username):
+    if username == 'prasanth':
+        return 'password'
+    return None
+
+@auth.error_handler
+def unauthorized():
+    return make_response(jsonify({'error': 'Please Enter Your Username and Password'}), 401)
 
 reminders = [
     {
@@ -69,6 +82,7 @@ def create_todoabc():
     return jsonify({'listofreminders': reminders}), 201
 
 @app.route('/todo/api/v1/todoabc', methods=['GET'])
+@auth.login_required
 def get_todolists():
     return jsonify({'todolists': [make_public_todoabc(todoabc) for todoabc in reminders]})
 
