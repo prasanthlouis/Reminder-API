@@ -3,6 +3,7 @@ from flask import Flask, jsonify
 from flask import abort
 from flask import make_response
 from flask import request
+from flask import url_for
 
 app = Flask(__name__)
 
@@ -10,79 +11,88 @@ reminders = [
     {
         'id': 1,
         'title': u'Market',
-        'description': u'Chips and Dips', 
-        'done': False
+        'desc': u'Chips and Dips', 
+        'finish': False
     },
     {
         'id': 2,
         'title': u'Interview at 3 p.m',
-        'description': u'Get shirt ironed', 
-        'done': False
+        'desc': u'Get shirt ironed', 
+        'finish': False
     },
      {
         'id': 3,
         'title': u'Meeting with the Boss',
-        'description': u'Bring the report', 
-        'done': False
+        'desc': u'Bring the report', 
+        'finish': False
     }
 
 ]
 
-@app.route('/todo/api/v1/task/<int:task_id>', methods=['DELETE'])
-def delete_task(task_id):
-    task = [task for task in reminders if task['id'] == task_id]
-    if len(task) == 0:
+@app.route('/todo/api/v1/todoabc/<int:todoabc_id>', methods=['DELETE'])
+def delete_todoabc(todoabc_id):
+    todoabc = [todoabc for todoabc in reminders if todoabc['id'] == todoabc_id]
+    if len(todoabc) == 0:
         abort(404)
-    reminders.remove(task[0])
+    reminders.remove(todoabc[0])
     return jsonify({'result': True})
 
-@app.route('/todo/api/v1/task/<int:task_id>', methods=['PUT'])
-def update_task(task_id):
-    task = [task for task in reminders if task['id'] == task_id]
-    if len(task) == 0:
+@app.route('/todo/api/v1/todoabc/<int:todoabc_id>', methods=['PUT'])
+def update_todoabc(todoabc_id):
+    todoabc = [todoabc for todoabc in reminders if todoabc['id'] == todoabc_id]
+    if len(todoabc) == 0:
         abort(404)
     if not request.json:
         abort(400)
     if 'title' in request.json and type(request.json['title']) != unicode:
         abort(400)
-    if 'description' in request.json and type(request.json['description']) is not unicode:
+    if 'desc' in request.json and type(request.json['desc']) is not unicode:
         abort(400)
-    if 'done' in request.json and type(request.json['done']) is not bool:
+    if 'finish' in request.json and type(request.json['finish']) is not bool:
         abort(400)
-    task[0]['title'] = request.json.get('title', task[0]['title'])
-    task[0]['description'] = request.json.get('description', task[0]['description'])
-    task[0]['done'] = request.json.get('done', task[0]['done'])
-    return jsonify({'task': task[0]})   
+    todoabc[0]['title'] = request.json.get('title', todoabc[0]['title'])
+    todoabc[0]['desc'] = request.json.get('desc', todoabc[0]['desc'])
+    todoabc[0]['finish'] = request.json.get('finish', todoabc[0]['finish'])
+    return jsonify({'todoabc': todoabc[0]})   
 
-@app.route('/todo/api/v1/task', methods=['POST'])
-def create_task():
+@app.route('/todo/api/v1/todoabc', methods=['POST'])
+def create_todoabc():
     if not request.json or not 'title' in request.json:
         abort(400)
-    task = {
+    todoabc = {
         'id': reminders[-1]['id'] + 1,
         'title': request.json['title'],
-        'description': request.json.get('description', ""),
-        'done': False
+        'desc': request.json.get('desc', ""),
+        'finish': False
     }
-    reminders.append(task)
+    reminders.append(todoabc)
     return jsonify({'listofreminders': reminders}), 201
 
+@app.route('/todo/api/v1/todoabc', methods=['GET'])
+def get_todolists():
+    return jsonify({'todolists': [make_public_todoabc(todoabc) for todoabc in reminders]})
 
+def make_public_todoabc(todoabc):
+    new_todoabc = {}
+    for field in todoabc:
+        if field == 'id':
+            new_todoabc['uri'] = url_for('get_todoabc', todoabc_id=todoabc['id'], _external=True)
+        else:
+            new_todoabc[field] = todoabc[field]
+    return new_todoabc
 @app.errorhandler(404)
 def not_found(error):
     return make_response(jsonify({'error': 'Not found'}), 404)
 
 
-@app.route('/todo/api/v1/task/<int:task_id>', methods=['GET'])
-def get_task(task_id):
-    task = [task for task in reminders if task['id'] == task_id]
-    if len(task) == 0:
+@app.route('/todo/api/v1/todoabc/<int:todoabc_id>', methods=['GET'])
+def get_todoabc(todoabc_id):
+    todoabc = [todoabc for todoabc in reminders if todoabc['id'] == todoabc_id]
+    if len(todoabc) == 0:
         abort(404)
-    return jsonify({'task': task[0]})
+    return jsonify({'todoabc': todoabc[0]})
 
-@app.route('/todo/api/v1/task', methods=['GET'])
-def get_reminders():
-    return jsonify({'listofreminders': reminders})
+
 
 if __name__ == '__main__':
     app.run(debug=True)
