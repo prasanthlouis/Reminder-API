@@ -27,6 +27,15 @@ reminders = [
     }
 
 ]
+
+@app.route('/todo/api/v1/task/<int:task_id>', methods=['DELETE'])
+def delete_task(task_id):
+    task = [task for task in reminders if task['id'] == task_id]
+    if len(task) == 0:
+        abort(404)
+    reminders.remove(task[0])
+    return jsonify({'result': True})
+
 @app.route('/todo/api/v1/task', methods=['POST'])
 def create_task():
     if not request.json or not 'title' in request.json:
