@@ -2,6 +2,7 @@
 from flask import Flask, jsonify
 from flask import abort
 from flask import make_response
+from flask import request
 
 app = Flask(__name__)
 
@@ -26,6 +27,18 @@ reminders = [
     }
 
 ]
+@app.route('/todo/api/v1/task', methods=['POST'])
+def create_task():
+    if not request.json or not 'title' in request.json:
+        abort(400)
+    task = {
+        'id': reminders[-1]['id'] + 1,
+        'title': request.json['title'],
+        'description': request.json.get('description', ""),
+        'done': False
+    }
+    reminders.append(task)
+    return jsonify({'listofreminders': reminders}), 201
 
 
 @app.errorhandler(404)
